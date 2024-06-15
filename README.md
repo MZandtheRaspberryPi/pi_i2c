@@ -1,2 +1,2 @@
 # pi_i2c
-a small library to do I2C communication with a raspberry pi
+A small library to do I2C communication with a raspberry pi via the I2C API provided by the Linux Kernel. Note that the pi hardware that does I2C (BCM2835) has a [bug](https://github.com/raspberrypi/linux/issues/254) with respect to how it handles clock stretching. I2C devices that use this may not work, so you may choose to enable a software I2C which fixes the issue [here](https://github.com/raspberrypi/firmware/blob/40eb78a3876379d78d7d3188940f86a39111f73c/boot/overlays/README#L2080) though this comes at the cost of wasted CPU.
