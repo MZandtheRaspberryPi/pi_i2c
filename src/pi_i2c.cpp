@@ -133,7 +133,48 @@ bool I2CBusRaspberryPi::writeBit(uint8_t devAddr, uint8_t regAddr,
   return success;
 }
 
-// int8_t readBits(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t
-// length, uint8_t *data); int8_t readByte(uint8_t devAddr, uint8_t regAddr,
-// uint8_t *data); int8_t readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t
-// length, uint8_t *data);
+/** Read multiple bits from an 8-bit device register.
+ * @param devAddr I2C slave device address
+ * @param regAddr Register regAddr to read from
+ * @param bitStart First bit position to read (0-7)
+ * @param length Number of bits to read (not more than 8)
+ * @param data Container for right-aligned value (i.e. '101' read from any bitStart position will equal 0x05)
+ * @return Status of read operation (true = success)
+ */
+int8_t I2CBusRaspberryPi::readBits(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t length, uint8_t *data) {
+  // 01101001 read byte
+  // 76543210 bit numbers
+  //    xxx   args: bitStart=4, length=3
+  //    010   masked
+  //   -> 010 shifted
+  sendBuf_[0] = regAddr;
+  bool success = write_then_read(devAddr, sendBuf_, 1, recvBuf_, 1);
+  if (success) {
+    uint8_t b = recvBuf_[0] ;
+    uint8_t mask = ((1 << length) - 1) << (bitStart - length + 1);
+    b &= mask;
+    b >>= (bitStart - length + 1);
+    *data = b;
+  } 
+  return success;
+}
+
+
+int8_t I2CBusRaspberryPi::readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) {
+  sendBuf_[0] = regAddr;
+  bool success = write_then_read(devAddr, sendBuf_, 1, recvBuf_, length);
+  int i ;
+  for (i = 0; i < length ; i++) {
+    data[i] = (uint8_t) recvBuf_[i];
+  }
+  return success;
+}
+
+int8_t I2CBusRaspberryPi::readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data) {
+  return readBytes(devAddr, regAddr, 1, data);
+}
+
+
+bool I2CBusRaspberryPi::writeByte(uint8_t devAddr, uint8_t regAddr, uint8_t data) {
+    return writeBits(devAddr, regAddr, 0, 8, data);
+}
