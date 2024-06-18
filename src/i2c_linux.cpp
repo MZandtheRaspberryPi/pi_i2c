@@ -1,22 +1,9 @@
-#include "pi_i2c.hpp"
+#include "i2c_linux.hpp"
 
-void delay(int64_t sleep_ms) {
-  std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
-}
-
-void log_msg(const std::string &msg) { std::cout << msg << std::endl; }
-
-uint64_t millis() {
-  std::chrono::milliseconds ms =
-      std::chrono::duration_cast<std::chrono::milliseconds>(
-          std::chrono::system_clock::now().time_since_epoch());
-  return ms.count();
-}
-
-I2CBusRaspberryPi::I2CBusRaspberryPi(const std::string &i2c_interface_name)
+I2CLinuxAPI::I2CLinuxAPI(const std::string &i2c_interface_name)
     : I2C_Handler(i2c_interface_name) {}
 
-bool I2CBusRaspberryPi::write(const uint8_t &device_address,
+bool I2CLinuxAPI::write(const uint8_t &device_address,
                               const uint8_t *buffer, size_t len) {
   i2c_msg messages[1] = {{device_address, 0, (typeof(i2c_msg().len))len,
                           (typeof(i2c_msg().buf))buffer}};
@@ -30,7 +17,7 @@ bool I2CBusRaspberryPi::write(const uint8_t &device_address,
   }
   return true;
 }
-bool I2CBusRaspberryPi::write_then_read(const uint8_t &device_address,
+bool I2CLinuxAPI::write_then_read(const uint8_t &device_address,
                                         const uint8_t *write_buffer,
                                         size_t write_len, uint8_t *read_buffer,
                                         size_t read_len) {
@@ -51,7 +38,7 @@ bool I2CBusRaspberryPi::write_then_read(const uint8_t &device_address,
   return true;
 }
 
-bool I2CBusRaspberryPi::begin() {
+bool I2CLinuxAPI::begin() {
   close();
   file_descriptor_ = ::open(i2c_interface_name_.c_str(), O_RDWR);
   if (file_descriptor_ == -1) {
@@ -61,7 +48,7 @@ bool I2CBusRaspberryPi::begin() {
   return true;
 }
 
-void I2CBusRaspberryPi::close() {
+void I2CLinuxAPI::close() {
   if (file_descriptor_ != -1) {
     ::close(file_descriptor_);
     file_descriptor_ = -1;
@@ -75,7 +62,7 @@ void I2CBusRaspberryPi::close() {
  * @param data Container for single bit value
  * @return Status of read operation (true = success)
  */
-int8_t I2CBusRaspberryPi::readBit(uint8_t devAddr, uint8_t regAddr,
+int8_t I2CLinuxAPI::readBit(uint8_t devAddr, uint8_t regAddr,
                                   uint8_t bitNum, uint8_t *data) {
   sendBuf_[0] = regAddr;
   bool success = write_then_read(devAddr, sendBuf_, 1, recvBuf_, 1);
@@ -95,7 +82,7 @@ int8_t I2CBusRaspberryPi::readBit(uint8_t devAddr, uint8_t regAddr,
  * @param data Right-aligned value to write
  * @return Status of operation (true = success)
  */
-bool I2CBusRaspberryPi::writeBits(uint8_t devAddr, uint8_t regAddr,
+bool I2CLinuxAPI::writeBits(uint8_t devAddr, uint8_t regAddr,
                                   uint8_t bitStart, uint8_t length,
                                   uint8_t data) {
   sendBuf_[0] = regAddr;
@@ -120,7 +107,7 @@ bool I2CBusRaspberryPi::writeBits(uint8_t devAddr, uint8_t regAddr,
  * @param value New bit value to write
  * @return Status of operation (true = success)
  */
-bool I2CBusRaspberryPi::writeBit(uint8_t devAddr, uint8_t regAddr,
+bool I2CLinuxAPI::writeBit(uint8_t devAddr, uint8_t regAddr,
                                  uint8_t bitNum, uint8_t data) {
   sendBuf_[0] = regAddr;
   bool success = write_then_read(devAddr, sendBuf_, 1, recvBuf_, 1);
@@ -141,7 +128,7 @@ bool I2CBusRaspberryPi::writeBit(uint8_t devAddr, uint8_t regAddr,
  * @param data Container for right-aligned value (i.e. '101' read from any bitStart position will equal 0x05)
  * @return Status of read operation (true = success)
  */
-int8_t I2CBusRaspberryPi::readBits(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t length, uint8_t *data) {
+int8_t I2CLinuxAPI::readBits(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t length, uint8_t *data) {
   // 01101001 read byte
   // 76543210 bit numbers
   //    xxx   args: bitStart=4, length=3
@@ -160,7 +147,7 @@ int8_t I2CBusRaspberryPi::readBits(uint8_t devAddr, uint8_t regAddr, uint8_t bit
 }
 
 
-int8_t I2CBusRaspberryPi::readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) {
+int8_t I2CLinuxAPI::readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) {
   sendBuf_[0] = regAddr;
   bool success = write_then_read(devAddr, sendBuf_, 1, recvBuf_, length);
   int i ;
@@ -170,11 +157,11 @@ int8_t I2CBusRaspberryPi::readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t le
   return success;
 }
 
-int8_t I2CBusRaspberryPi::readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data) {
+int8_t I2CLinuxAPI::readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data) {
   return readBytes(devAddr, regAddr, 1, data);
 }
 
 
-bool I2CBusRaspberryPi::writeByte(uint8_t devAddr, uint8_t regAddr, uint8_t data) {
+bool I2CLinuxAPI::writeByte(uint8_t devAddr, uint8_t regAddr, uint8_t data) {
     return writeBits(devAddr, regAddr, 0, 8, data);
 }
