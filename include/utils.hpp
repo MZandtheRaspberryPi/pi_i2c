@@ -6,6 +6,8 @@
 #include <string>
 #include <thread>
 
+typedef float float32_t;
+
 void delay(int64_t sleep_ms);
 
 void log_msg(const std::string &msg);
@@ -23,6 +25,19 @@ T min(const T& a, const T& b)
         return b;
     }
 }
+
+template <typename T>
+T max(const T& a, const T& b)
+{
+    if (a <= b)
+    {
+        return b;
+    }
+    else {
+        return a;
+    }
+}
+
 
 
 #endif
