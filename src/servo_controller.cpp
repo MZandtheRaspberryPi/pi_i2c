@@ -153,6 +153,11 @@ bool ServoController::set_servo_angle(const uint8_t &servo_num,
   return true;
 }
 
+void ServoController::setPWM(uint8_t num, uint16_t on, uint16_t off)
+{
+  motor_driver_->setPWM(num, on, off);
+}
+
 // void calibratedPWM(byte i, float angle, float speedRatio = 0) {
 //   /*float angle = max(-SERVO_ANG_RANGE/2, min(SERVO_ANG_RANGE/2, angle));
 //     if (i > 3 && i < 8)
