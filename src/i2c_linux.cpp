@@ -67,7 +67,7 @@ int8_t I2CLinuxAPI::readBit(uint8_t devAddr, uint8_t regAddr,
   sendBuf_[0] = regAddr;
   bool success = write_then_read(devAddr, sendBuf_, 1, recvBuf_, 1);
   if (success) {
-    *data = recvBuf_[1] & (1 << bitNum);
+    *data = recvBuf_[0] & (1 << bitNum);
     return 1;
   } else {
     return 0;
@@ -164,4 +164,21 @@ int8_t I2CLinuxAPI::readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data) {
 
 bool I2CLinuxAPI::writeByte(uint8_t devAddr, uint8_t regAddr, uint8_t data) {
     return writeBits(devAddr, regAddr, 0, 8, data);
+}
+
+
+int8_t I2CLinuxAPI::readBytesExtendedReg(uint8_t devAddr, uint16_t regAddr, uint8_t length, uint8_t *data)
+{
+  // most significant byte first
+  // least significant byte second
+  sendBuf_[0] = regAddr >> 8;
+  // need a mask like 0000 0000 1111 1111
+  // so 2^8 - 1 = 255 = 
+  sendBuf_[1] = regAddr & 0xFF;
+  bool success = write_then_read(devAddr, sendBuf_, 2, recvBuf_, length);
+  int i ;
+  for (i = 0; i < length ; i++) {
+    data[i] = (uint8_t) recvBuf_[i];
+  }
+  return success;
 }

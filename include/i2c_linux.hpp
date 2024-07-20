@@ -1,6 +1,7 @@
 #ifndef __PI_I2C__
 #define __PI_I2C__
 
+#include <cmath>
 #include <cstdint>
 #include <fcntl.h>
 #include <linux/i2c-dev.h>
@@ -29,6 +30,7 @@ public:
     bool writeBit(uint8_t devAddr, uint8_t regAddr, uint8_t bitNum, uint8_t data);
     bool writeByte(uint8_t devAddr, uint8_t regAddr, uint8_t data);
     int8_t readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data);
+    int8_t readBytesExtendedReg(uint8_t devAddr, uint16_t regAddr, uint8_t length, uint8_t *data);
     int8_t readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data);
 
 private:

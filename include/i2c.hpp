@@ -27,6 +27,7 @@ public:
                         uint8_t data) = 0;
   virtual bool writeByte(uint8_t devAddr, uint8_t regAddr, uint8_t data) = 0;
   virtual int8_t readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) = 0;
+  virtual int8_t readBytesExtendedReg(uint8_t devAddr, uint16_t regAddr, uint8_t length, uint8_t *data) = 0;
   virtual int8_t readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data) = 0;
 
 protected:

@@ -8,6 +8,7 @@ class MotorDriver {
 public:
   MotorDriver() {}
   virtual void setPWM(uint8_t num, uint16_t on, uint16_t off) = 0;
+  virtual void setPwmFreq(float32_t freq) = 0;
 };
 
 class Adafruit_PWMServoDriver_Wrapper : public MotorDriver {
@@ -17,6 +18,10 @@ public:
   }
   void setPWM(uint8_t num, uint16_t on, uint16_t off) {
     driver_.setPWM(num, on, off);
+  }
+  
+  void setPwmFreq(float32_t freq) {
+    driver_.setPWMFreq(freq);
   }
 
 private:
