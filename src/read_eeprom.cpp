@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
 
   const uint8_t eeprom_addr = std::stoul(argv[1]);
   const uint16_t register_addr = std::stoul(argv[2]);
-  std::cout << "reading from eeprom at: " << static_cast<uint16_T>(eeprom_addr) << " and register: " << register_addr << std::endl;
+  std::cout << "reading from eeprom at: " << static_cast<uint16_t>(eeprom_addr) << " and register: " << register_addr << std::endl;
 
 
   EEPROM eeprom(eeprom_addr, &i2c_dev);

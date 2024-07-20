@@ -175,6 +175,9 @@ int8_t I2CLinuxAPI::readBytesExtendedReg(uint8_t devAddr, uint16_t regAddr, uint
   // need a mask like 0000 0000 1111 1111
   // so 2^8 - 1 = 255 = 
   sendBuf_[1] = regAddr & 0xFF;
+  for (uint8_t i = 0; i < length ; i++) {
+    recvBuf_[i] = 0;
+  }
   bool success = write_then_read(devAddr, sendBuf_, 2, recvBuf_, length);
   int i ;
   for (i = 0; i < length ; i++) {
