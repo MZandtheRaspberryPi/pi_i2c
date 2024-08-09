@@ -32,7 +32,7 @@ ServoBoardConfig::ServoBoardConfig(
   pulsewidth_offset_ = servo_pwm_freq_ / 50 * min_pulsewidth_to_command_;
   min_angles_ = std::vector<float32_t>(num_servos_);
   max_angles_ = std::vector<float32_t>(num_servos_);
-  max_angles_ = std::vector<float32_t>(num_servos_);
+  zero_positions_ = std::vector<float32_t>(num_servos_);
   servo_pwm_pin_num_ = std::vector<uint8_t>(num_servos_, 0);
   invert_servo_positions_ = std::vector<bool>(num_servos_);
   for (uintmax_t i = 0; i < num_servos_; i++) {
