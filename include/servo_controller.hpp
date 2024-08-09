@@ -10,6 +10,12 @@
 #include "utils.hpp"
 
 
+
+uint8_t calc_pca9685_prescaler(float32_t servo_pwm_freq, uint32_t pca9685_oscillator_freq);
+float32_t calc_microseconds_to_pulse(uint16_t microseconds, uint8_t pca9685_prescaler,  uint32_t pca9685_oscillator_freq);
+float32_t calc_angle_to_pulsewidth_slope(uint16_t min_microseconds_to_command, uint16_t max_microseconds_to_command,
+                                         float32_t angular_range, float32_t microseconds_to_pulse);
+
 class ServoBoardConfig {
 public:
   ServoBoardConfig(uint8_t num_servos,
@@ -17,9 +23,11 @@ public:
                    float32_t default_upper_angle_limit = 90.0,
                    float32_t default_zero_position = 0,
                    bool default_invert_servo_position = false,
-                   float32_t angular_range = 180,
-                   uint16_t min_pulsewidth_to_command = 500,
-                   uint16_t max_pulsewidth_to_command = 2500,
+                   float32_t angular_range = 270,
+                   uint16_t min_microseconds_to_command = 500,
+                   uint16_t max_microseconds_to_command = 2500,
+                   uint16_t min_pulsewidth_to_command = 150,
+                   uint16_t max_pulsewidth_to_command = 600,
                    float32_t servo_pwm_frequency = 60,
                    uint32_t pca9685_oscillator_freq = 25000000);
   bool set_min_angle(const uint8_t &servo_num,
@@ -36,21 +44,31 @@ public:
   bool servo_angle_to_adj_angle(const uint8_t & servo_num, const float32_t& angle, float32_t& angle_out);
   bool servo_angle_to_pulsewidth(const uint8_t & servo_num, const float32_t& angle, uint16_t& pwm_out);
   float32_t get_servo_pwm_freq();
-  void set_servo_pwm_freq(const float32_t& freq);
   bool get_servo_pwm_pin_num(const uint8_t &servo_num, uint8_t& pwm_pin);
   bool set_servo_pwm_pin_num(const uint8_t &servo_num, const uint8_t &pwm_pin);
+  bool get_servo_angular_range(const uint8_t &servo_num, float32_t& angular_range);
+  bool set_servo_angular_range(const uint8_t &servo_num, const float32_t& angular_range);
   uint8_t get_num_servos();
+  float32_t get_microseconds_to_pulse();
+  uint8_t get_pca9685_prescaler_value();
 
 private:
+
+
   uint8_t num_servos_;
-  float32_t angular_range_;
+  uint16_t min_microseconds_to_command_;
+  uint16_t max_microseconds_to_command_;
   uint16_t min_pulsewidth_to_command_;
   uint16_t max_pulsewidth_to_command_;
-  float32_t angle_to_pulsewidth_slope_;
+  uint16_t pulsewidth_offset_;
   float32_t servo_pwm_freq_;
   uint32_t pca9685_oscillator_freq_;
+  float32_t microseconds_to_pulse_;
+  uint8_t pca9685_prescaler_value_;
   std::vector<float32_t> min_angles_;
   std::vector<float32_t> max_angles_;
+  std::vector<float32_t> angular_ranges_;
+  std::vector<float32_t> angle_to_pulsewidth_slopes_;
   std::vector<float32_t> zero_positions_;
   std::vector<bool> invert_servo_positions_;
   std::vector<uint8_t> servo_pwm_pin_num_;

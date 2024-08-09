@@ -8,19 +8,28 @@ ServoBoardConfig::ServoBoardConfig(
     uint8_t num_servos, float32_t default_lower_angle_limit,
     float32_t default_upper_angle_limit, float32_t default_zero_position,
     bool default_invert_servo_position, float32_t angular_range,
+    uint16_t min_microseconds_to_command,
+    uint16_t max_microseconds_to_command,
     uint16_t min_pulsewidth_to_command, uint16_t max_pulsewidth_to_command,
     float32_t servo_pwm_frequency, 
     uint32_t pca9685_oscillator_freq) {
   num_servos_ = num_servos;
 
   servo_pwm_freq_ = servo_pwm_frequency;
-  angular_range_ = angular_range;
+  angular_ranges_ = std::vector<float32_t>(num_servos_, angular_range);
+
+  min_microseconds_to_command_ = min_microseconds_to_command;
+  max_microseconds_to_command_ = max_microseconds_to_command;
   min_pulsewidth_to_command_ = min_pulsewidth_to_command;
   max_pulsewidth_to_command_ = max_pulsewidth_to_command;
-  angle_to_pulsewidth_slope_ =
-      1.0 * (max_pulsewidth_to_command_ - min_pulsewidth_to_command_) /
-      (angular_range_);
   pca9685_oscillator_freq_ = pca9685_oscillator_freq;
+  pca9685_prescaler_value_ = calc_pca9685_prescaler(servo_pwm_freq_, pca9685_oscillator_freq_);
+  microseconds_to_pulse_ = calc_microseconds_to_pulse(1, pca9685_prescaler_value_,  pca9685_oscillator_freq_);
+  float32_t angle_to_pulsewidth_slope = calc_angle_to_pulsewidth_slope(min_microseconds_to_command_, max_microseconds_to_command_,
+                      angular_range, microseconds_to_pulse_);
+  angle_to_pulsewidth_slopes_ = std::vector<float32_t>(num_servos_, angle_to_pulsewidth_slope);
+  // servo_freq / default_freq * min_pulsewidth
+  pulsewidth_offset_ = servo_pwm_freq_ / 50 * min_pulsewidth_to_command_;
   min_angles_ = std::vector<float32_t>(num_servos_);
   max_angles_ = std::vector<float32_t>(num_servos_);
   max_angles_ = std::vector<float32_t>(num_servos_);
@@ -64,9 +73,16 @@ bool ServoBoardConfig::servo_angle_to_pulsewidth(const uint8_t &servo_num,
   if (!is_servo_num_valid(servo_num)) {
     return false;
   }
-
-  pwm_out =
-      min_pulsewidth_to_command_ + round(angle_to_pulsewidth_slope_ * angle);
+  const float32_t& angle_to_pulsewidth_slope = angle_to_pulsewidth_slopes_[servo_num];
+  pwm_out = round(angle_to_pulsewidth_slope / 1000.0 * angle + pulsewidth_offset_);
+  if (pwm_out > max_microseconds_to_command_)
+  {
+    return false;
+  }
+  if (pwm_out < min_microseconds_to_command_)
+  {
+    return false;
+  }
   return true;
 }
 
@@ -145,10 +161,6 @@ bool ServoBoardConfig::set_invert_servo_flag(const uint8_t &servo_num,
 
 float32_t ServoBoardConfig::get_servo_pwm_freq() { return servo_pwm_freq_; }
 
-void ServoBoardConfig::set_servo_pwm_freq(const float32_t &freq) {
-  servo_pwm_freq_ = freq;
-}
-
 bool ServoBoardConfig::get_servo_pwm_pin_num(const uint8_t &servo_num,
                                              uint8_t &pwm_pin) {
   if (!is_servo_num_valid(servo_num)) {
@@ -167,6 +179,71 @@ bool ServoBoardConfig::set_servo_pwm_pin_num(const uint8_t &servo_num,
 }
 
 uint8_t ServoBoardConfig::get_num_servos() { return num_servos_; }
+
+float32_t ServoBoardConfig::get_microseconds_to_pulse()
+{
+  return microseconds_to_pulse_;
+}
+
+uint8_t ServoBoardConfig::get_pca9685_prescaler_value() 
+{
+  return pca9685_prescaler_value_;
+}
+
+bool ServoBoardConfig::get_servo_angular_range(const uint8_t &servo_num, float32_t& angular_range)
+{
+  if (!is_servo_num_valid(servo_num)) {
+    return false;
+  }
+  angular_range = angular_ranges_[servo_num];
+  return true;
+}
+bool ServoBoardConfig::set_servo_angular_range(const uint8_t &servo_num, const float32_t& angular_range)
+{
+
+  if (!is_servo_num_valid(servo_num)) {
+    return false;
+  }
+  angular_ranges_[servo_num] = angular_range;
+  angle_to_pulsewidth_slopes_[servo_num] = calc_angle_to_pulsewidth_slope(min_pulsewidth_to_command_,
+                                                                          max_microseconds_to_command_,
+                                      angular_range, microseconds_to_pulse_);
+
+  return true;
+
+
+}
+
+uint8_t calc_pca9685_prescaler(float32_t servo_pwm_freq, uint32_t pca9685_oscillator_freq)
+{
+  // calculate prescaler based on Equation 1 from datasheet section 7.3.5
+  float32_t denominator = static_cast<float32_t>(4096 * servo_pwm_freq);
+  float32_t prescaler_pre_rounding = static_cast<float32_t>(pca9685_oscillator_freq) / denominator;
+  uint8_t prescaler_value = round(prescaler_pre_rounding) - 1;
+  return prescaler_value;
+}
+
+
+float32_t calc_microseconds_to_pulse(uint16_t microseconds, uint8_t pca9685_prescaler,  uint32_t pca9685_oscillator_freq)
+{
+  // Calculate the pulse for PWM based on Equation 1 from the datasheet section 7.3.5
+  float32_t pulse = microseconds;
+  float32_t pulse_length = 1000000;  // 1,000,000 us per second
+  pca9685_prescaler += 1;
+  pulse_length *= pca9685_prescaler;
+  pulse_length /= pca9685_oscillator_freq;
+  pulse /= pulse_length;
+  return pulse;
+}
+
+float32_t calc_angle_to_pulsewidth_slope(uint16_t min_microseconds_to_command, uint16_t max_microseconds_to_command,
+                                    float32_t angular_range, float32_t microseconds_to_pulse)
+{
+  float32_t angle_to_pulsewidth_slope = 1.0 * (max_microseconds_to_command - min_microseconds_to_command) /
+      (angular_range);
+  angle_to_pulsewidth_slope *= microseconds_to_pulse;
+  return angle_to_pulsewidth_slope;
+}
 
 ServoController::ServoController(ServoBoardConfig *servo_config,
                                  MotorDriver *motor_driver) {
@@ -208,31 +285,3 @@ bool ServoController::set_servo_angle(const uint8_t &servo_num,
 void ServoController::setPWM(uint8_t num, uint16_t on, uint16_t off) {
   motor_driver_->setPWM(num, on, off);
 }
-
-// void calibratedPWM(byte i, float angle, float speedRatio = 0) {
-//   /*float angle = max(-SERVO_ANG_RANGE/2, min(SERVO_ANG_RANGE/2, angle));
-//     if (i > 3 && i < 8)
-//     angle = max(-5, angle);*/
-//   angle = max(float(loadAngleLimit(i, 0)), min(float(loadAngleLimit(i, 1)),
-//   angle)); int duty0 = EEPROMReadInt(CALIBRATED_ZERO_POSITIONS + i * 2) +
-//   currentAng[i] * eeprom(ROTATION_DIRECTION, i); currentAng[i] = angle;
-
-//   int duty = EEPROMReadInt(CALIBRATED_ZERO_POSITIONS + i * 2) + angle *
-//   eeprom(ROTATION_DIRECTION, i); int steps = speedRatio > 0 ?
-//   int(round(abs(duty - duty0) / 1.0 /*degreeStep*/ / speedRatio)) : 0;
-//   //if default speed is 0, no interpolation will be used
-//   //otherwise the speed ratio is compared to 1 degree per second.
-//   for (int s = 0; s <= steps; s++) {
-//     pwm.writeAngle(i, duty + (steps == 0 ? 0 : (1 + cos(M_PI * s / steps)) /
-//     2 * (duty0 - duty)));
-//   }
-// }
-
-// void Adafruit_PWMServoDriver::writeAngle(uint8_t num, float32_t angle) {
-//   int duty = EEPROMReadInt(ZERO_POSITIONS + target[0] * 2) +
-//   float(servoCalib[target[0]]) * eeprom(ROTATION_DIRECTION, target[0]);
-//   pwm.writeAngle(target[0], duty);
-//   int clipped = min(max(EEPROMReadInt(ANGLE2PULSE_FACTOR + servoNum * 2) /
-//   1000.0 * angle + (byte)eeprom(B_OFFSET) * 10, 500), 2500);
-//   setPWM(eeprom(PWM_PIN, servoNum), 0, clipped);
-// }
