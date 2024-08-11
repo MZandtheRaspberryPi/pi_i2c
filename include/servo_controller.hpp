@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <string>
 #include <vector>
 
 #include "i2c.hpp"
@@ -78,7 +79,8 @@ private:
 
 class ServoController {
   public:
-    ServoController(ServoBoardConfig* servo_config, MotorDriver* motor_driver);
+    ServoController(ServoBoardConfig* servo_config, MotorDriver* motor_driver,
+                                 bool init_to_zero = false);
     bool set_servo_angle(const uint8_t &servo_num,
                          const float32_t &servo_angle);
     void setPWM(uint8_t num, uint16_t on, uint16_t off);

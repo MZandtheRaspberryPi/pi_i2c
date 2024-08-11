@@ -246,7 +246,8 @@ float32_t calc_angle_to_pulsewidth_slope(uint16_t min_microseconds_to_command, u
 }
 
 ServoController::ServoController(ServoBoardConfig *servo_config,
-                                 MotorDriver *motor_driver) {
+                                 MotorDriver *motor_driver,
+                                 bool init_to_zero) {
   servo_config_ = servo_config;
   motor_driver_ = motor_driver;
   uint8_t servo_num = servo_config_->get_num_servos();
@@ -256,9 +257,11 @@ ServoController::ServoController(ServoBoardConfig *servo_config,
 
   // set freq of pwm
   motor_driver_->setPwmFreq(servo_config_->get_servo_pwm_freq());
-  // set all servos to zero pos
-  for (uint8_t i = 0; i < servo_num; i++) {
-    set_servo_angle(i, 0);
+  if (init_to_zero)
+  {
+    for (uint8_t i = 0; i < servo_num; i++) {
+      set_servo_angle(i, 0);
+    }
   }
 }
 
@@ -273,7 +276,8 @@ bool ServoController::set_servo_angle(const uint8_t &servo_num,
       servo_num, cur_angles_[servo_num], cur_angles_adj_[servo_num]);
   success &= servo_config_->servo_angle_to_pulsewidth(
       servo_num, cur_angles_adj_[servo_num], cur_pwm_[servo_num]);
-  motor_driver_->setPWM(servo_num, 0, cur_pwm_[servo_num]);
+  log_msg("Would have set servo " + to_string(servo_num) + cur_pwm_[servo_num] );
+  //motor_driver_->setPWM(servo_num, 0, cur_pwm_[servo_num]);
   if (!success) {
     log_msg("could not adjust angle and calc pulsewidth");
     return false;
