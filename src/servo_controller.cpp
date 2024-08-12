@@ -214,6 +214,36 @@ bool ServoBoardConfig::set_servo_angular_range(const uint8_t &servo_num, const f
 
 }
 
+
+std::string ServoBoardConfig::to_string()
+{
+  std::string log_str = "Servo Config Object:\n";
+  log_str += "num_servos_: " + std::to_string(num_servos_) + "\n";
+  log_str += "min_microseconds_to_command_: " + std::to_string(min_microseconds_to_command_) + "\n";
+  log_str += "max_microseconds_to_command_: " + std::to_string(max_microseconds_to_command_) + "\n";
+  log_str += "min_pulsewidth_to_command_: " + std::to_string(min_pulsewidth_to_command_) + "\n";
+  log_str += "max_pulsewidth_to_command_: " + std::to_string(max_pulsewidth_to_command_) + "\n";
+  
+  log_str += "pulsewidth_offset_: " + std::to_string(pulsewidth_offset_) + "\n";
+  log_str += "servo_pwm_freq_: " + std::to_string(servo_pwm_freq_) + "\n";
+  log_str += "pca9685_oscillator_freq_: " + std::to_string(pca9685_oscillator_freq_) + "\n";
+  log_str += "microseconds_to_pulse_: " + std::to_string(microseconds_to_pulse_) + "\n";
+  log_str += "pca9685_prescaler_value_: " + std::to_string(pca9685_prescaler_value_) + "\n";
+
+  for (uint8_t i = 0; i < num_servos_; i++)
+  {
+    log_str += "servo: " + std::to_string(i) + "\n";
+    log_str += "min_angle: " + std::to_string(min_angles_[i]) + "\n";
+    log_str += "max_angle: " + std::to_string(max_angles_[i]) + "\n";
+    log_str += "angular_range: " + std::to_string(angular_ranges_[i]) + "\n";
+    log_str += "angle_to_pulsewidth_slope: " + std::to_string(angle_to_pulsewidth_slopes_[i]) + "\n";
+    log_str += "zero_position: " + std::to_string(zero_positions_[i]) + "\n";
+    log_str += "invert_servo_position: " + std::to_string(invert_servo_positions_[i]) + "\n";
+    log_str += "servo_pwm_pin_num: " + std::to_string(servo_pwm_pin_num_[i]) + "\n";
+  }
+  return log_str;
+}
+
 uint8_t calc_pca9685_prescaler(float32_t servo_pwm_freq, uint32_t pca9685_oscillator_freq)
 {
   // calculate prescaler based on Equation 1 from datasheet section 7.3.5

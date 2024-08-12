@@ -52,6 +52,7 @@ public:
   uint8_t get_num_servos();
   float32_t get_microseconds_to_pulse();
   uint8_t get_pca9685_prescaler_value();
+  std::string to_string();
 
 private:
 
