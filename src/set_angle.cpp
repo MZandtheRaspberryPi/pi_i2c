@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
 
   i2c_dev.close();
 
-  std::cout << "Set pin " << pin_num << " to " << angle
+  std::cout << "Set pin " << std::to_string(pin_num) << " to " << std::to_string(angle)
             << std::endl;
   return 0;
 }

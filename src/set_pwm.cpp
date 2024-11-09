@@ -18,6 +18,9 @@ int main(int argc, char* argv[])
   i2c_dev.begin();
   uint8_t num_servos = 16;
   ServoBoardConfig servo_config = ServoBoardConfig(num_servos);
+  ServoBoardConfig servo_config = make_bittle_config();
+  std::string log_str = servo_config.to_string();
+  std::cout << "servo board config str:" << std::endl << log_str << std::endl;
   Adafruit_PWMServoDriver_Wrapper motor_driver(PCA9685_I2C_ADDRESS, &i2c_dev);
   ServoController servo_controller = ServoController(&servo_config,
                                  &motor_driver);
