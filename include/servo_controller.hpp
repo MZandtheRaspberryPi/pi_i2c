@@ -85,6 +85,7 @@ class ServoController {
     bool set_servo_angle(const uint8_t &servo_num,
                          const float32_t &servo_angle);
     void setPWM(uint8_t num, uint16_t on, uint16_t off);
+    uint16_t getPWM(uint8_t num, bool off = true);
 
   private:
     void angle_to_pwm(const uint8_t &servo_num, const float32_t& angle, uint16_t& pwm);

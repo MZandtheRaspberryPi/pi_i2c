@@ -322,3 +322,9 @@ bool ServoController::set_servo_angle(const uint8_t &servo_num,
 void ServoController::setPWM(uint8_t num, uint16_t on, uint16_t off) {
   motor_driver_->setPWM(num, on, off);
 }
+
+
+uint16_t ServoController::getPWM(uint8_t num, bool off)
+{
+  return motor_driver_->getPWM(num, off);
+}

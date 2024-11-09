@@ -19,7 +19,11 @@ public:
   void setPWM(uint8_t num, uint16_t on, uint16_t off) {
     driver_.setPWM(num, on, off);
   }
-  
+  // If true, returns PWM OFF value, otherwise PWM ON
+  uint16_t getPWM(uint8_t num, bool off = true)
+  {
+    return driver_.getPWM(num, off);
+  }
   void setPwmFreq(float32_t freq) {
     driver_.setPWMFreq(freq);
   }
