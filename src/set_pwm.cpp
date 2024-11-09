@@ -17,7 +17,6 @@ int main(int argc, char* argv[])
   I2CLinuxAPI i2c_dev(i2c_name);
   i2c_dev.begin();
   uint8_t num_servos = 16;
-  ServoBoardConfig servo_config = ServoBoardConfig(num_servos);
   ServoBoardConfig servo_config = make_bittle_config();
   std::string log_str = servo_config.to_string();
   std::cout << "servo board config str:" << std::endl << log_str << std::endl;
