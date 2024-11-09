@@ -328,3 +328,7 @@ uint16_t ServoController::getPWM(uint8_t num, bool off)
 {
   return motor_driver_->getPWM(num, off);
 }
+
+float32_t ServoController::readPwmFreq() {
+  return motor_driver_->readPwmFreq();
+}

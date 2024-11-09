@@ -27,11 +27,13 @@ int main(int argc, char* argv[])
 
   servo_controller.setPWM(pin_num, 0, pwm);
   uint16_t cur_pwm = servo_controller.getPWM(pin_num, true);
+  float32_t cur_freq = servo_controller.readPwmFreq();
 
   i2c_dev.close();
 
   std::cout << "Set pin " << std::to_string(pin_num) << " to " << std::to_string(pwm)
             << std::endl;
   std::cout << "Pwm was set to " << std::to_string(cur_pwm) << std::endl;
+  std::cout << "Pwm frequency is " << std::to_string(cur_freq) << std::endl;
   return 0;
 }
