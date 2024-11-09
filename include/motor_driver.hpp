@@ -34,10 +34,10 @@ public:
     uint8_t prescale = driver_.readPrescale();
     uint32_t oscillator_frequency = driver_.getOscillatorFrequency();
     // prescaler is calculated for pca9685 as per datasheet:
-    // float prescaleval = ((_oscillator_freq / (freq * 4096.0)) + 0.5) - 1;
+    // float prescaleval = round(_oscillator_freq / (freq * 4096.0)) - 1;
     // so we solve for freq
-    // pwm_freq = (oscillator_freq / (prescaleval + 1 - 0.5) )/ 4096
-    float32_t pwm_freq = (float32_t)oscillator_frequency / (4096.0 * ((float32_t)prescale + 1 - 0.5));
+    // pwm_freq = (oscillator_freq / (prescaleval + 1) )/ 4096
+    float32_t pwm_freq = (float32_t)oscillator_frequency / (4096.0 * ((float32_t)prescale + 1));
     return pwm_freq;
   }
 
