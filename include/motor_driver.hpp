@@ -8,6 +8,7 @@ class MotorDriver {
 public:
   MotorDriver() {}
   virtual void setPWM(uint8_t num, uint16_t on, uint16_t off) = 0;
+  virtual uint16_t getPWM(uint8_t num, bool off = true) = 0;
   virtual void setPwmFreq(float32_t freq) = 0;
 };
 
