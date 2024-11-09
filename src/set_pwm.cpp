@@ -28,8 +28,6 @@ int main(int argc, char* argv[])
   servo_controller.setPWM(pin_num, 0, pwm);
   uint16_t cur_pwm = servo_controller.getPWM(pin_num, true);
 
-  uint16_t pwm_off_val = servo_controller.
-
   i2c_dev.close();
 
   std::cout << "Set pin " << std::to_string(pin_num) << " to " << std::to_string(pwm)
