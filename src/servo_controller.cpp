@@ -345,14 +345,15 @@ bool ServoController::set_servo_angle(const uint8_t &servo_num,
   
   bool pwm_success = servo_config_->servo_angle_to_pulsewidth(
       servo_num, cur_angles_adj_[servo_num], cur_pwm_[servo_num]);
-  if ((!adj_angle_success) || (!pwm_success)) {
+  uint8_t pwm_pin = 0;
+  bool pwm_pin_success = servo_config_->get_servo_pwm_pin_num(servo_num, pwm_pin);
+  if ((!adj_angle_success) || (!pwm_success) || (!pwm_pin_success)) {
     std::string servo_str = "ERROR on servo: " + std::to_string(servo_num) + " , command angle: " + std::to_string(servo_angle) ;
     log_msg(servo_str + ": adj_angle " + std::to_string(adj_angle_success) + ", " + std::to_string(cur_angles_adj_[servo_num]) 
             + " pwm: " + std::to_string(pwm_success) + ", " + std::to_string(cur_pwm_[servo_num]));
     return false;
   }
-  
-  motor_driver_->setPWM(servo_num, 0, cur_pwm_[servo_num]);
+  motor_driver_->setPWM(pwm_pin, 0, cur_pwm_[servo_num]);
 
   return true;
 }
