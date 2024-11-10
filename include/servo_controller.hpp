@@ -86,7 +86,8 @@ class ServoController {
     ServoController(ServoBoardConfig* servo_config, MotorDriver* motor_driver,
                                  bool init_to_zero = false);
     bool set_servo_angle(const uint8_t &servo_num,
-                         const float32_t &servo_angle);
+                         const float32_t &servo_angle,
+                         bool debug = false);
     void setPWM(uint8_t num, uint16_t on, uint16_t off);
     uint16_t getPWM(uint8_t num, bool off = true);
     float32_t readPwmFreq();
