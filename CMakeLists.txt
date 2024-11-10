@@ -16,8 +16,6 @@ add_library(${PROJECT_NAME}_lib STATIC
 
 target_include_directories(${PROJECT_NAME}_lib PUBLIC include Adafruit-PWM-Servo-Driver-Library)
 
-add_executable(set_angle src/set_angle.cpp)
-target_link_libraries(set_angle PUBLIC ${PROJECT_NAME}_lib)
 add_executable(set_pwm src/set_pwm.cpp)
 target_link_libraries(set_pwm PUBLIC ${PROJECT_NAME}_lib)
 add_executable(read_eeprom src/read_eeprom.cpp)

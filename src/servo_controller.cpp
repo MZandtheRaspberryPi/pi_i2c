@@ -20,6 +20,10 @@ ServoBoardConfig::ServoBoardConfig(
 
   min_microseconds_to_command_ = min_microseconds_to_command;
   max_microseconds_to_command_ = max_microseconds_to_command;
+  middle_point_microseconds_ = static_cast<float32_t>(max_pulsewidth_to_command_ - min_pulsewidth_to_command_) / 2;
+  
+  float32_t microseconds_per_refresh = 1000000.0 / servo_pwm_freq_;
+  microseconds_to_pwm_coeff_ = 4096.0 / microseconds_per_refresh;
   min_pulsewidth_to_command_ = min_pulsewidth_to_command;
   max_pulsewidth_to_command_ = max_pulsewidth_to_command;
   pca9685_oscillator_freq_ = pca9685_oscillator_freq;
@@ -57,13 +61,15 @@ bool ServoBoardConfig::servo_angle_to_adj_angle(const uint8_t &servo_num,
   if (invert_servo_positions_[servo_num]) {
     angle_out *= -1;
   }
-
-  // in some robot setups (like the Bittle robot) the middle of the pulse width
-  // range (1500) does not correspond to zero degrees, first we account for
-  // that. Then we account for max/min angles.
-  angle_out = angle_out + zero_positions_[servo_num];
+  
+  // we do the min/max in our idealized coordinates before converting to the servo command degrees
   angle_out = max(angle_out, min_angles_[servo_num]);
   angle_out = min(angle_out, max_angles_[servo_num]);
+
+  // in some robot setups (like the Bittle robot) the middle of the angular range
+  // does not correspond to zero degrees with the coordinate system we chose for legs, so first we account for
+  // that. Then we account for max/min angles.
+  angle_out = angle_out + angular_ranges_[servo_num] / 2 + zero_positions_[servo_num];
   return true;
 }
 
@@ -73,13 +79,17 @@ bool ServoBoardConfig::servo_angle_to_pulsewidth(const uint8_t &servo_num,
   if (!is_servo_num_valid(servo_num)) {
     return false;
   }
-  const float32_t& angle_to_pulsewidth_slope = angle_to_pulsewidth_slopes_[servo_num];
-  pwm_out = round(angle_to_pulsewidth_slope / 1000.0 * angle + pulsewidth_offset_);
-  if (pwm_out > max_microseconds_to_command_)
+  // const float32_t& angle_to_pulsewidth_slope = angle_to_pulsewidth_slopes_[servo_num];
+  // pwm_out = round(angle_to_pulsewidth_slope / 1000.0 * angle + pulsewidth_offset_);
+
+  uint16_t microseconds = get_microseconds_from_angle(servo_num, angle);
+  pwm_out = get_pwm_from_microseconds(servo_num, microseconds);
+
+  if (pwm_out > max_pulsewidth_to_command_)
   {
     return false;
   }
-  if (pwm_out < min_microseconds_to_command_)
+  if (pwm_out < min_pulsewidth_to_command_)
   {
     return false;
   }
@@ -244,6 +254,34 @@ std::string ServoBoardConfig::to_string()
   return log_str;
 }
 
+
+uint16_t ServoBoardConfig::get_pwm_from_microseconds(const uint8_t &servo_num, const uint16_t &microseconds)
+{
+  // we have 0 to 4096 resolution for pwm
+  // we need to translate from microseconds of width assuming 20ms default refresh rate
+  // which most servos take to command (1500 is usually 90 degrees, ect)
+  // to how many steps of our 4096 signal to keep high, at whatever refresh rate it's running at
+  // to achieve the microseconds of width we need
+  uint16_t pwm = static_cast<float32_t>(microseconds) * microseconds_to_pwm_coeff_;
+  return pwm;
+
+}
+
+
+uint16_t ServoBoardConfig::get_microseconds_from_angle(const uint8_t &servo_num, const float32_t &angle)
+{
+  // most servos when width of high pulse is 1500 microseconds, will go to their 90 degree rotation point
+  // this is regardless of the refresh rate of the signal, between 40 and 200HZ
+  // so we go first from angle to microseconds of pulse
+  // we will go from command angle to microseconds, 500-2500
+  // 500 + (2500 - 500) * angle  / angular range 
+  // if angle is zero, we go all the way to one end, 500
+  // if angle is 270, we go to other end, 2500
+
+  uint16_t microseconds = static_cast<float32_t>(min_microseconds_to_command_) + angle_to_pulsewidth_slopes_[servo_num] * angle;
+  return microseconds;
+}
+
 uint8_t calc_pca9685_prescaler(float32_t servo_pwm_freq, uint32_t pca9685_oscillator_freq)
 {
   // calculate prescaler based on Equation 1 from datasheet section 7.3.5
@@ -271,7 +309,7 @@ float32_t calc_angle_to_pulsewidth_slope(uint16_t min_microseconds_to_command, u
 {
   float32_t angle_to_pulsewidth_slope = 1.0 * (max_microseconds_to_command - min_microseconds_to_command) /
       (angular_range);
-  angle_to_pulsewidth_slope *= microseconds_to_pulse;
+  // angle_to_pulsewidth_slope *= microseconds_to_pulse;
   return angle_to_pulsewidth_slope;
 }
 
@@ -318,6 +356,23 @@ bool ServoController::set_servo_angle(const uint8_t &servo_num,
 
   return true;
 }
+
+/*
+uint16_t ServoBoardConfig::get_pwm_from_microseconds(const uint8_t &servo_num, const uint16_t &microseconds)
+{
+  // we have 0 to 4096 resolution for pwm
+  // we need to translate from microseconds of width assuming 20ms default refresh rate
+  // which most servos take to command (1500 is usually 90 degrees, ect)
+  // to how many steps of our 4096 signal to keep high, at whatever refresh rate it's running at
+  // to achieve the microseconds of width we need
+  uint16_t pwm = static_cast<float32_t>(microseconds) * microseconds_to_pwm_coeff_;
+  return pwm;
+
+}
+
+
+uint16_t ServoBoardConfig::get_microseconds_from_angle(const uint8_t &servo_num, const float32_t &angle)
+*/
 
 void ServoController::setPWM(uint8_t num, uint16_t on, uint16_t off) {
   motor_driver_->setPWM(num, on, off);

@@ -29,7 +29,7 @@ public:
                    uint16_t max_microseconds_to_command = 2500,
                    uint16_t min_pulsewidth_to_command = 150,
                    uint16_t max_pulsewidth_to_command = 600,
-                   float32_t servo_pwm_frequency = 60,
+                   float32_t servo_pwm_frequency = 50,
                    uint32_t pca9685_oscillator_freq = 25000000);
   bool set_min_angle(const uint8_t &servo_num,
                      const float32_t &lower_angle_limit);
@@ -55,11 +55,13 @@ public:
   std::string to_string();
 
 private:
-
+  uint16_t get_microseconds_from_angle(const uint8_t &servo_num, const float32_t &angle);
+  uint16_t get_pwm_from_microseconds(const uint8_t &servo_num, const uint16_t &microseconds);
 
   uint8_t num_servos_;
   uint16_t min_microseconds_to_command_;
   uint16_t max_microseconds_to_command_;
+  float32_t middle_point_microseconds_;
   uint16_t min_pulsewidth_to_command_;
   uint16_t max_pulsewidth_to_command_;
   uint16_t pulsewidth_offset_;
@@ -67,6 +69,7 @@ private:
   uint32_t pca9685_oscillator_freq_;
   float32_t microseconds_to_pulse_;
   uint8_t pca9685_prescaler_value_;
+  float32_t microseconds_to_pwm_coeff_;
   std::vector<float32_t> min_angles_;
   std::vector<float32_t> max_angles_;
   std::vector<float32_t> angular_ranges_;
