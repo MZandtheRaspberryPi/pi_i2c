@@ -29,10 +29,10 @@ int main(int argc, char* argv[])
   float32_t servo_pwm_frequency = 50;
   uint32_t pca9685_oscillator_freq = 25000000;
 
-  ServoBoardConfig servo_config = ServoBoardConfig(num_servos, default_lower_angle_limit, default_upper_angle_limit
+  ServoBoardConfig servo_config = ServoBoardConfig(num_servos, default_lower_angle_limit, default_upper_angle_limit,
                                                    default_zero_position, default_invert_servo_position,
                                                    angular_range, min_microseconds_to_command, max_microseconds_to_command,
-                                                   min_pulsewidth_to_command, max_pulsewidth_to_command, servo_pwm_frequency
+                                                   min_pulsewidth_to_command, max_pulsewidth_to_command, servo_pwm_frequency,
                                                    pca9685_oscillator_freq);
   std::string log_str = servo_config.to_string();
   std::cout << "servo board config str:" << std::endl << log_str << std::endl;
