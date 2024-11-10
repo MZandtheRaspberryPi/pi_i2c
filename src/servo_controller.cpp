@@ -360,23 +360,6 @@ bool ServoController::set_servo_angle(const uint8_t &servo_num,
   return true;
 }
 
-/*
-uint16_t ServoBoardConfig::get_pwm_from_microseconds(const uint8_t &servo_num, const uint16_t &microseconds)
-{
-  // we have 0 to 4096 resolution for pwm
-  // we need to translate from microseconds of width assuming 20ms default refresh rate
-  // which most servos take to command (1500 is usually 90 degrees, ect)
-  // to how many steps of our 4096 signal to keep high, at whatever refresh rate it's running at
-  // to achieve the microseconds of width we need
-  uint16_t pwm = static_cast<float32_t>(microseconds) * microseconds_to_pwm_coeff_;
-  return pwm;
-
-}
-
-
-uint16_t ServoBoardConfig::get_microseconds_from_angle(const uint8_t &servo_num, const float32_t &angle)
-*/
-
 void ServoController::setPWM(uint8_t num, uint16_t on, uint16_t off) {
   motor_driver_->setPWM(num, on, off);
 }
