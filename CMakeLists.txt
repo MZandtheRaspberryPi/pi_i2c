@@ -4,6 +4,7 @@ project(pi_i2c VERSION 0.0.1)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 add_library(${PROJECT_NAME}_lib STATIC
               src/i2c_linux.cpp
